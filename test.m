@@ -1,14 +1,16 @@
 % Main script for car plate detection
 % Load the image and detect plates
-image = imread('carplate.jpg');
-minPlateArea = 4500;
-maxPlateArea = 30000;
+image = imread('proton.jpg');
+minPlateArea = 4100;
+maxPlateArea = 15000;
 plates = find_possible_plates(image, minPlateArea, maxPlateArea);
 
 if ~isempty(plates)
     for i = 1:length(plates)
         plate_img = plates{i}{1};
         characters = plates{i}{2};
+
+        disp(i);
         % Display the detected plate
         figure;
         imshow(plate_img);
@@ -168,7 +170,12 @@ function plates = find_possible_plates(input_img, minPlateArea, maxPlateArea)
             min_row = ceil(bbox(2));
             max_row = min_row + floor(bbox(4)) - 1;
             plate = input_img(min_row:max_row, min_col:max_col, :);
-            plates{end+1} = plate; % Store or process further
+            % Clean the plate and segment characters
+            [cleaned_plate, plateFound, ~] = clean_plate(plate, minPlateArea, maxPlateArea);
+            if plateFound
+                characters = segment_chars(cleaned_plate);
+                plates{end+1} = {cleaned_plate, characters}; % Store as nested cell array
+            end
         end
     end
 end
