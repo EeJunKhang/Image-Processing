@@ -1,6 +1,3 @@
-% Malaysian License Plate Recognition Script
-% Requires Computer Vision Toolbox and Image Processing Toolbox
-
 function detectMalaysianLicensePlate(imagePath)
     % Read the input image
     originalImage = imread(imagePath);
