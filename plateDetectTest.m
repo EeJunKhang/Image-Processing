@@ -1,7 +1,7 @@
 function [np, firstCharBBox] = plateDetectTest2(img)
     % Image correlation method
     % Matches 2 matrices
-    load('imgfildata.mat');
+    load('imgfildata2.mat');
     [~, cc] = size(img);
     picture = imresize(img, [300 500]);
     
@@ -36,6 +36,15 @@ function [np, firstCharBBox] = plateDetectTest2(img)
     picture = bwareaopen(picture, 30);  % Remove small objects (< 30 pixels)
     figure;
     imshow(picture);
+
+    % Define area range for license plate characters
+    % Adjust these thresholds based on your image
+    minArea = 200;  % Minimum area for characters (adjust as needed)
+    maxArea = 10000; % Maximum area to remove large objects like rectangles (adjust as needed)
+
+    % Keep objects with area between minArea and maxArea
+    %picture = bwareafilt(picture, [minArea maxArea])
+
     if cc > 2000
         picture1 = bwareaopen(picture, 3500);  % Remove objects < 3500 pixels
     else
