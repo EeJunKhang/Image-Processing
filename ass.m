@@ -1,13 +1,15 @@
-function detectMalaysianLicensePlate(imagePath)
+clc
     % Read the input image
-    originalImage = imread(imagePath);
+    originalImage = imread('vois.jpg');
     
     % Convert to grayscale
     grayImage = rgb2gray(originalImage);
     
     % Apply preprocessing techniques
     % 1. Contrast enhancement
-    enhancedImage = adapthisteq(grayImage);
+    enhancedImage = imadjust(grayImage); % Boost contrast
+    %enhancedImage = imadjust(grayImage, stretchlim(grayImage), []);
+    enhancedImage = adapthisteq(enhancedImage);
     
     % 2. Noise reduction
     denoisedImage = medfilt2(enhancedImage);
@@ -17,7 +19,7 @@ function detectMalaysianLicensePlate(imagePath)
     
     % 4. Morphological operations for plate region detection
     % Dilation to connect potential plate regions
-    dilatedEdges = imdilate(edgeImage, strel('rectangle', [3 15]));
+    dilatedEdges = imdilate(edgeImage, strel('rectangle', [5 20]));
     
     % Fill holes
     filledRegions = imfill(dilatedEdges, 'holes');
@@ -43,7 +45,11 @@ function detectMalaysianLicensePlate(imagePath)
         % Area check (proportional to image size)
         area = regionProps(i).Area;
         imageArea = size(originalImage, 1) * size(originalImage, 2);
-        
+
+         % Draw rectangle for all detected regions
+         rectangleImage = insertShape(rectangleImage, 'Rectangle', ...
+            bbox, 'Color', 'red', 'LineWidth', 1, LineWidth=5);
+
         % Filter conditions
         if (aspectRatio >= 3 && aspectRatio <= 4.5) && ...
            (area > 0.001 * imageArea && area < 0.1 * imageArea)
@@ -51,15 +57,13 @@ function detectMalaysianLicensePlate(imagePath)
             
             % Draw rectangle for potential plate regions
             rectangleImage = insertShape(rectangleImage, 'Rectangle', ...
-                regionProps(i).BoundingBox, 'Color', 'green', 'LineWidth', 2);
+                regionProps(i).BoundingBox, 'Color', 'green', 'LineWidth', 2, LineWidth=5);
             
-            % Draw rectangle for all detected regions
-            rectangleImage = insertShape(rectangleImage, 'Rectangle', ...
-                bbox, 'Color', 'red', 'LineWidth', 1);
+           
         else
             % Draw rectangle for non-plate regions in blue
-            rectangleImage = insertShape(rectangleImage, 'Rectangle', ...
-                bbox, 'Color', 'blue', 'LineWidth', 1);
+            %rectangleImage = insertShape(rectangleImage, 'Rectangle', ...
+                %bbox, 'Color', 'blue', 'LineWidth', 1);
         end
     end
     
@@ -96,29 +100,31 @@ function detectMalaysianLicensePlate(imagePath)
         
         % 8. Visualization
         figure('Position', [100, 100, 1200, 800]);
+
+        plateImage = imcrop(originalImage, plateBoundingBox); % Crop from original color image
         
         % Subplots for different stages of processing
         subplot(2,2,1), imshow(originalImage), title('Original Image');
-        subplot(2,2,2), imshow(edgeImage), title('Edge Detection');
-        subplot(2,2,3), imshow(binaryPlate), title('Plate Region');
+        subplot(2,2,2), imshow(dilatedEdges), title('Edge Detection');
+        subplot(2,2,3), imshow(filledRegions), title('Plate Region');
         subplot(2,2,4), imshow(rectangleImage), title('Detected Regions');
         
         % Add text explanation to the rectangle visualization
-        subplot(2,2,4);
-        text(10, size(rectangleImage,1) + 20, ...
-            'Rectangle Colors:', 'FontWeight', 'bold');
-        text(10, size(rectangleImage,1) + 40, ...
-            'Green: Potential Plate Regions', 'Color', 'green');
-        text(10, size(rectangleImage,1) + 60, ...
-            'Red: Plate Region Boundaries', 'Color', 'red');
-        text(10, size(rectangleImage,1) + 80, ...
-            'Blue: Non-Plate Regions', 'Color', 'blue');
+        %subplot(2,2,4);
+        %text(10, size(rectangleImage,1) + 20, ...
+            %'Rectangle Colors:', 'FontWeight', 'bold');
+        %text(10, size(rectangleImage,1) + 40, ...
+            %'Green: Potential Plate Regions', 'Color', 'green');
+        %text(10, size(rectangleImage,1) + 60, ...
+            %'Red: Plate Region Boundaries', 'Color', 'red');
+        %text(10, size(rectangleImage,1) + 80, ...
+            %'Blue: Non-Plate Regions', 'Color', 'blue');
         
         % Optional: OCR (Note: Requires Computer Vision Toolbox)
         try
-            ocrResults = ocr(binaryPlate);
-            disp('Detected License Plate:');
-            disp(ocrResults.Text);
+            %ocrResults = ocr(binaryPlate);
+            %disp('Detected License Plate:');
+            %disp(ocrResults.Text);
             
             % Display OCR results in the last subplot
             %subplot(2,3,5);
@@ -132,7 +138,3 @@ function detectMalaysianLicensePlate(imagePath)
     else
         disp('No license plate detected');
     end
-end
-
-% Example usage
-detectMalaysianLicensePlate('carplate.jpg');

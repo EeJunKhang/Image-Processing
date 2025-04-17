@@ -18,7 +18,7 @@ end
 % figure,imshow(a);
 % b=imdilate(a,se);
 threshold = graythresh(picture);
-picture =~im2bw(picture,threshold);
+picture =im2bw(picture,threshold);
 picture = bwareaopen(picture,30);
 imshow(picture)
 if cc>2000
@@ -48,6 +48,7 @@ for n=1:Ne
     [r,c] = find(L==n);
     n1=picture(min(r):max(r),min(c):max(c));
     n1=imresize(n1,[42,24]);
+    figure;
     imshow(n1)
     pause(0.2)
     x=[ ];

@@ -30,7 +30,7 @@ function np=number_plate2(img)
     
     
     [L,Ne]=bwlabel(picture2);  %l gives matrix which has info of nmbr plate and Ne gives number of digits or characters
-    
+    disp(Ne);
     
     final_output=[];
     t=[];
@@ -63,6 +63,7 @@ function np=number_plate2(img)
     disp(np)
 
 end
-
-image = imread("test images\vios.jpg");
+clc
+clear
+image = imread("result7.jpg");
 finalanswer = number_plate2(image);
