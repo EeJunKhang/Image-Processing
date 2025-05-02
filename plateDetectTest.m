@@ -1,7 +1,27 @@
 function [np, firstCharBBox] = plateDetectTest2(img)
+    % Perform initial OCR with specified character set
+    %mainOcr = ocr(img, CharacterSet='ABCDEFGHJKLMNPQRSTUVWXYZ0123456789', LayoutAnalysis='character', Model='english');
+    %disp(mainOcr);
+    % Initialize firstCharBBox
+    %firstCharBBox = [];
+    
+    % Check if OCR result is valid
+    %ocrText = strtrim(mainOcr.Text);
+    %if ~isempty(ocrText) && all(isstrprop(ocrText, 'alphanum')) && ...
+       %strlength(ocrText) > 2 && strlength(ocrText) <= 8
+        % Valid OCR result: extract first character's bounding box
+        %if ~isempty(mainOcr.Words)
+            % Get the bounding box of the first word/character
+            % WordBoundingBoxes: [x, y, width, height]
+            %firstCharBBox = mainOcr.WordBoundingBoxes(1, :);
+        %end
+        %np = ocrText;
+        %return; % Return immediately with np and firstCharBBox
+    %end
+
     % Image correlation method
     % Matches 2 matrices
-    load('imgfildata2.mat');
+    %load('imgfildata2.mat');
     [~, cc] = size(img);
     picture = imresize(img, [300 500]);
     
@@ -121,37 +141,56 @@ function [np, firstCharBBox] = plateDetectTest2(img)
     
     firstCharBBox = [];
     final_output = [];
+    padding = 5;
     for n = 1:Ne
         % Process characters in sorted order
         char_idx = sorted_idx(n);
         [r, c] = find(L == char_idx);
-        n1 = picture(min(r):max(r), min(c):max(c));  % Crop nth object
-        n1 = imresize(n1, [42, 24]);  % Resize to match database size
-        figure;
-        imshow(n1);
+       
+        r1 = max(min(r) - padding, 1);
+        r2 = min(max(r) + padding, size(picture, 1));
+        c1 = max(min(c) - padding, 1);
+        c2 = min(max(c) + padding, size(picture, 2));
+
+        n1 = picture(r1:r2, c1:c2);
+        %n1 = picture(min(r):max(r), min(c):max(c));  % Crop nth object
+        n1 = imresize(n1, [100, 100]);  % Resize to match database size
+        %n1 = imresize(n1, [42, 24]);  % Resize to match database size
+        
         % Store bounding box for the first character in sorted order
         if n == 1
             firstCharBBox = [min(c), min(r), max(c) - min(c) + 1, max(r) - min(r) + 1];
         end
-        
-        x = [];
-        totalLetters = size(imgfile, 2);
+        n1 = imcomplement(n1);
+        ans = ocr(n1, CharacterSet="ABCDEFGHJKLMNPQRSTUVWXYZ0123456789", LayoutAnalysis="character", Model="english").Text;
+        disp(ans);
+        charText = strtrim(ans);
+        if ~isempty(charText) && all(isstrprop(charText, 'alphanum')) && strlength(charText) == 1
+            final_output = [final_output charText];
+        else
+            disp('Skipped noisy OCR output');
+        end
+
+        %disp("ocr");
+        %disp(ans);
+        figure;
+        imshow(n1);
+        %x = [];
+        %totalLetters = size(imgfile, 2);
     
-        for k = 1:totalLetters
-            y = corr2(imgfile{1, k}, n1);
-            x = [x y];
-        end
+        %for k = 1:totalLetters
+            %y = corr2(imgfile{1, k}, n1);
+           %x = [x y];
+       % end
         
-        if max(x) > 0.35
-            z = find(x == max(x));
-            out = cell2mat(imgfile(2, z));
-            final_output = [final_output out];
-        end
+        %if max(x) > 0.35
+            %z = find(x == max(x));
+            %out = cell2mat(imgfile(2, z));
+            %final_output = [final_output out];
+        %end
     end
     
     np = final_output;
-    disp('Recognized characters:');
-    disp(np);
 end
 
 clc;
@@ -159,4 +198,9 @@ clear;
 [file,path]=uigetfile({'*.jpg;*.bmp;*.png;*.tif'},'Choose an image');
 s=[path,file];
 picture=imread(s);
+%test = ocr(picture, CharacterSet="ABCDEFGHJKLMNPQRSTUVWXYZ0123456789", LayoutAnalysis="character", Model="english");
+%disp("main ocr")
+%disp(test.Text);
 [a,b] = plateDetectTest2(picture);
+disp('Recognized characters:');
+disp(a);

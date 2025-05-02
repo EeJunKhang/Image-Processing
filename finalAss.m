@@ -2,25 +2,29 @@ clc
 clear
 %IMG-20250414-WA0177.jpg - 2 8 inverted background issue
 %carplate.jpg - 2 8
-%ev.jpg - 2 8 - very close (1 character wrong); 1 5 - can
-%IMG-20250414-WA0204.jpg - 2 8 detect plate but cannot ocr
+%ev.jpg - 2 8 - very close (1 character wrong); 1 5 - can, cnanot
+%IMG-20250414-WA0204.jpg - 2 8 - inverted issue
 %mercedes.jpg - 2 8
 %car2.jpg - 2 8 detect plate but not ocr
-%sms.jpg - 2 8 font diff
-%KJ8-HondaCity - 2 8
-%UKM - 2 8
-%car3 - 2 8 close 
-%vgr - 2 8 font diff
-%black - 2 8 font diff
+%sms.jpg - 2 8
+%KJ8-HondaCity - 2 8 detect len is 2 (filtered out)
+%UKM - 2 8 cannot
+%car3 - 2 8 cnanot
+%vgr - 2 8
+%black - 2 8 close, first char wrong
 %big - 2 8 ocr got problem
 %test2 - 2 6 ocr lighting on image
-%test - 2 8 font diff
-%337564373_1159416691422375_9123487902255978681_n - 2 8 font diff
+%test - 2 8
+%337564373_1159416691422375_9123487902255978681_n - 2 8
 %337166832_5904455639676740_285992518671105305_n - 2 8 
-%grey - 2 8 ocr got problem
+%grey - 2 8
+%IMG_20250419_1323352 - 2 8
+%IMG_20250424_0812332 - 2 8
+%IMG_20250310_1049013 - 2 8
+%126061387_4167529469940194_3888307349537178725_n2 - 2 8
 
 % Read the input image
-originalImage = imread('grey.jpg');
+originalImage = imread('126061387_4167529469940194_3888307349537178725_n2.jpg');
 
 % Convert to grayscale
 grayImage = rgb2gray(originalImage);
@@ -112,10 +116,13 @@ for idx = 1:length(plateRegions)
 
     plateImage = imcrop(originalImage, paddedBBox);
     
+    figure;
+    imshow(plateImage);
+
     % Save for debugging (optional)
-    if idx == 2
-        imwrite(plateImage, "result8.png"); % Use PNG for lossless
-    end
+    %if idx == 1
+        %imwrite(plateImage, "result20.png"); % Use PNG for lossless
+    %end
     
     % Histogram-based filtering
     isValidPlate = true; % Assume valid unless proven otherwise
@@ -149,7 +156,7 @@ for idx = 1:length(plateRegions)
     if (stdR < stdThreshold && stdG < stdThreshold && stdB < stdThreshold) || ...
        (freqMiddleR > freqThreshold && freqMiddleG > freqThreshold && freqMiddleB > freqThreshold)
         isValidPlate = false; % Image is too uniform (single color, normal-like histogram)
-        %disp(['Skipping plate candidate ', num2str(idx), ': Histogram indicates uniform color']);
+        disp(['Skipping plate candidate ', num2str(idx), ': Histogram indicates uniform color']);
     end
     
     % Visualize histogram for debugging
@@ -163,9 +170,9 @@ for idx = 1:length(plateRegions)
         % Apply manual OCR approach and get first character bounding box
         addpath("functions");
         [text, firstCharBBox] = plateDetect(plateImage);
-        
+        disp(text);
         % Check if the detected text meets criteria
-        if ~isempty(text) && any(isstrprop(text, 'digit')) && strlength(text) > 2 && strlength(text) <= 8
+        if ~isempty(text) && any(isstrprop(text, 'digit')) && strlength(text) > 2 && strlength(text) <= 7
             bottom_y = bbox(2) + bbox(4); % Bottom of the bounding box
             validCandidates{end+1} = {text, bbox, bottom_y};
             
@@ -195,6 +202,7 @@ end
 
 % 7. Select the best plate region
 if ~isempty(validCandidates)
+    disp(validCandidates)
     bottom_ys = cellfun(@(x) x{3}, validCandidates);
     [~, max_idx] = max(bottom_ys);
     bestPlateText = validCandidates{max_idx}{1};
