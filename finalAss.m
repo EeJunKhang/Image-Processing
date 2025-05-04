@@ -22,9 +22,11 @@ clear
 %IMG_20250424_0812332 - 2 8
 %IMG_20250310_1049013 - 2 8
 %126061387_4167529469940194_3888307349537178725_n2 - 2 8
+%156608911_3726984024022394_7157110332085937238_n - 2 8 d looks like 0
+%ZC3353 - 2 8 Z looks like 4
 
 % Read the input image
-originalImage = imread('126061387_4167529469940194_3888307349537178725_n2.jpg');
+originalImage = imread('Bus_5.HEIC');
 
 % Convert to grayscale
 grayImage = rgb2gray(originalImage);
@@ -120,8 +122,8 @@ for idx = 1:length(plateRegions)
     imshow(plateImage);
 
     % Save for debugging (optional)
-    %if idx == 1
-        %imwrite(plateImage, "result20.png"); % Use PNG for lossless
+    %if idx == 2
+        %imwrite(plateImage, "result21.png"); % Use PNG for lossless
     %end
     
     % Histogram-based filtering
