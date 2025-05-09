@@ -4,20 +4,20 @@ clear
 %carplate.jpg - 2 8
 %ev.jpg - 2 8 - very close (1 character wrong); 1 5 - can, cnanot
 %IMG-20250414-WA0204.jpg - 2 8 - inverted issue
-%mercedes.jpg - 2 8
+%mercedes.jpg - 2 8 cannot
 %car2.jpg - 2 8 detect plate but not ocr
 %sms.jpg - 2 8
 %KJ8-HondaCity - 2 8 detect len is 2 (filtered out)
 %UKM - 2 8 cannot
 %car3 - 2 8 cnanot
-%vgr - 2 8
+%vgr - 2 8 brightness
 %black - 2 8 close, first char wrong
-%big - 2 8 ocr got problem
+%Car_7 - 2 8
 %test2 - 2 6 ocr lighting on image
-%test - 2 8
+%test - 2 8 cannot
 %337564373_1159416691422375_9123487902255978681_n - 2 8
-%337166832_5904455639676740_285992518671105305_n - 2 8 
-%grey - 2 8
+%337166832_5904455639676740_285992518671105305_n - 2 8 cannot
+%grey - 2 8 - first char cannot
 %IMG_20250419_1323352 - 2 8
 %IMG_20250424_0812332 - 2 8
 %IMG_20250310_1049013 - 2 8
@@ -25,8 +25,25 @@ clear
 %156608911_3726984024022394_7157110332085937238_n - 2 8 d looks like 0
 %ZC3353 - 2 8 Z looks like 4
 
+%motor kl 470733805_9833816083339961_7529046492942010054_n - 3 3 can main
+%ocr only
+%motor Motor_43.jpg - 3 3
+%motor 473051820_1277536843467482_7704225075181614595_n - 3 3, can main
+%ocr only
+
+%Taxi_13
+%Taxi_1
+
+%Lorry IMG_20250505_104745-2
+%Lorry IMG_20250505_104625-2
+%Lorry IMG_20250505_104808-2.jpg
+%Lorry IMG_20250505_104851-2.jpg
+
+isSmallPlate = false;
+indexL = 0;
+
 % Read the input image
-originalImage = imread('Bus_5.HEIC');
+originalImage = imread('Car/Car_27.jpg');
 
 % Convert to grayscale
 grayImage = rgb2gray(originalImage);
@@ -43,7 +60,12 @@ denoisedImage = medfilt2(enhancedImage);
 edgeImage = edge(denoisedImage, 'sobel');
 
 % 4. Morphological operations for plate region detection
-dilatedEdges = imdilate(edgeImage, strel('rectangle', [2 8]));
+if(isSmallPlate)
+    dilatedEdges = imdilate(edgeImage, strel('rectangle', [3 3]));
+else
+    dilatedEdges = imdilate(edgeImage, strel('rectangle', [2 8]));
+end
+
 filledRegions = imfill(dilatedEdges, 'holes');
 
 % 5. Candidate region selection
@@ -53,10 +75,10 @@ imageArea = size(originalImage, 1) * size(originalImage, 2);
 rectangleImage = originalImage;
 
 % Define a list of colors for isClose boxes
-colorList = {'blue', 'yellow', 'cyan', 'magenta', 'white', 'black', 'red'};
+colorList = {'blue', 'yellow', 'cyan', 'magenta', 'white', 'black'};
 colorCount = length(colorList);
 colorIndex = 1;
-disp(imageArea * 0.001)
+disp(imageArea * 0.0005)
 disp(imageArea * 0.1)
 for i = 1:length(regionProps)
     bbox = regionProps(i).BoundingBox;
@@ -64,30 +86,55 @@ for i = 1:length(regionProps)
     area = regionProps(i).Area;
 
     % Draw rectangle for all detected regions
-    %rectangleImage = insertShape(rectangleImage, 'Rectangle', bbox, 'Color', 'red', 'LineWidth', 1, LineWidth=5);
-    
-    % Filter conditions for potential plate regions
-    if (aspectRatio >= 3 && aspectRatio <= 4.5) && (area > 0.001 * imageArea && area < 0.1 * imageArea)
-        plateRegions = [plateRegions, i];
-        rectangleImage = insertShape(rectangleImage, 'Rectangle', regionProps(i).BoundingBox, 'Color', 'green', 'LineWidth', 2, LineWidth=5);
-    else
-        isClose = (aspectRatio >= 2.5 && aspectRatio <= 5) && ...
-                  (area > 0.0005 * imageArea && area < 0.15 * imageArea);
+    rectangleImage = insertShape(rectangleImage, 'Rectangle', bbox, 'Color', 'red', 'LineWidth', 1, LineWidth=5);
 
-       if isClose
-            % Pick a color from the list and cycle
-            currentColor = colorList{colorIndex};
-            rectangleImage = insertShape(rectangleImage, 'Rectangle', bbox, ...
-                'Color', currentColor, 'LineWidth', 2);
-            if strcmp(currentColor, 'magenta')
-                disp(currentColor)
-                disp(aspectRatio);
-                disp(area);
+    % Filter conditions for potential plate regions
+    if(~isSmallPlate)
+        if (aspectRatio >= 3 && aspectRatio <= 4.5) && (area > 0.001 * imageArea && area < 0.1 * imageArea)
+            plateRegions = [plateRegions, i];
+            rectangleImage = insertShape(rectangleImage, 'Rectangle', regionProps(i).BoundingBox, 'Color', 'green', 'LineWidth', 2, LineWidth=5);
+        else
+            isClose = (aspectRatio >= 2.5 && aspectRatio <= 5) && ...
+                (area > 0.0005 * imageArea && area < 0.15 * imageArea);
+
+            if isClose
+                % Pick a color from the list and cycle
+                currentColor = colorList{colorIndex};
+                rectangleImage = insertShape(rectangleImage, 'Rectangle', bbox, ...
+                    'Color', currentColor, 'LineWidth', 2);
+                %if strcmp(currentColor, 'magenta')
+                    %disp(currentColor)
+                    %disp(aspectRatio);
+                    %disp(area);
+                %end
+                % Cycle color index
+                colorIndex = mod(colorIndex, colorCount) + 1;
             end
-            % Cycle color index
-            colorIndex = mod(colorIndex, colorCount) + 1;
+        end
+    else % small plate
+        if (aspectRatio >= 1.3 && aspectRatio <= 3) && (area > 0.0005 * imageArea && area < 0.1 * imageArea)
+            plateRegions = [plateRegions, i];
+            rectangleImage = insertShape(rectangleImage, 'Rectangle', regionProps(i).BoundingBox, 'Color', 'green', 'LineWidth', 2, LineWidth=5);
+        else
+            isClose = (aspectRatio >= 1.0 && aspectRatio <= 4.5) && ...
+                (area > 0.0001 * imageArea && area < 0.15 * imageArea);
+
+            if isClose
+                % Pick a color from the list and cycle
+                currentColor = colorList{colorIndex};
+                rectangleImage = insertShape(rectangleImage, 'Rectangle', bbox, ...
+                    'Color', currentColor, 'LineWidth', 2);
+                %if strcmp(currentColor, 'white')
+                    %disp(currentColor)
+                    %disp(aspectRatio);
+                    %disp(area);
+                %end
+                % Cycle color index
+                colorIndex = mod(colorIndex, colorCount) + 1;
+            end
         end
     end
+
 end
 
 % 6. Plate extraction and manual OCR integration
@@ -105,99 +152,99 @@ for idx = 1:length(plateRegions)
         bbox(2) - padding, ...        % Shift y up
         bbox(3) + 2 * padding, ...    % Increase width
         bbox(4) + 2 * padding         % Increase height
-    ];
-    
+        ];
+
     % Ensure padded bounding box stays within image boundaries
     paddedBBox(1) = max(1, paddedBBox(1)); % x >= 1
     paddedBBox(2) = max(1, paddedBBox(2)); % y >= 1
     paddedBBox(3) = min(paddedBBox(3), size(originalImage, 2) - paddedBBox(1) + 1); % width
     paddedBBox(4) = min(paddedBBox(4), size(originalImage, 1) - paddedBBox(2) + 1); % height
-    
+
     % Round to integer values for imcrop
     paddedBBox = round(paddedBBox);
 
     plateImage = imcrop(originalImage, paddedBBox);
-    
+
     figure;
     imshow(plateImage);
 
     % Save for debugging (optional)
-    %if idx == 2
-        %imwrite(plateImage, "result21.png"); % Use PNG for lossless
-    %end
-    
+    if idx == indexL && indexL ~= 0
+        imwrite(plateImage, "result50.png"); % Use PNG for lossless
+    end
+
     % Histogram-based filtering
     isValidPlate = true; % Assume valid unless proven otherwise
-    
+
     % Compute histograms for each RGB channel
     r = plateImage(:,:,1);
     g = plateImage(:,:,2);
     b = plateImage(:,:,3);
-    
+
     [histR, bins] = imhist(r);
     [histG, ~] = imhist(g);
     [histB, ~] = imhist(b);
-    
+
     % Calculate standard deviation of intensities for each channel
     stdR = std(double(r(:)));
     stdG = std(double(g(:)));
     stdB = std(double(b(:)));
-    
+
     % Define intensity range for "middle" (e.g., 50-200 out of 0-255)
     middleRange = (bins >= 50) & (bins <= 200);
     freqMiddleR = sum(histR(middleRange)) / sum(histR); % Fraction of pixels in middle range
     freqMiddleG = sum(histG(middleRange)) / sum(histG);
     freqMiddleB = sum(histB(middleRange)) / sum(histB);
-    
+
     % Filter criteria:
     % - Low standard deviation indicates low contrast (uniform color)
     % - High frequency in middle range indicates a single dominant color
     stdThreshold = 30; % Adjust based on valid plate images (e.g., 30-50 for contrast)
     freqThreshold = 0.8; % Adjust: fraction of pixels in middle range (e.g., 0.8 means 80%)
-    
+
     if (stdR < stdThreshold && stdG < stdThreshold && stdB < stdThreshold) || ...
-       (freqMiddleR > freqThreshold && freqMiddleG > freqThreshold && freqMiddleB > freqThreshold)
+            (freqMiddleR > freqThreshold && freqMiddleG > freqThreshold && freqMiddleB > freqThreshold)
         isValidPlate = false; % Image is too uniform (single color, normal-like histogram)
         disp(['Skipping plate candidate ', num2str(idx), ': Histogram indicates uniform color']);
     end
-    
+
     % Visualize histogram for debugging
     %figure;
     %subplot(3,1,1); bar(bins, histR); title('red');
     %subplot(3,1,2); bar(bins, histG); title('Green Channel Histogram');
     %subplot(3,1,3); bar(bins, histB); title('Blue Channel Histogram');
-    
+
     % Proceed only if the plate is valid
     if isValidPlate
         % Apply manual OCR approach and get first character bounding box
         addpath("functions");
-        [text, firstCharBBox] = plateDetect(plateImage);
+        [text] = plateDetect5(plateImage);
         disp(text);
         % Check if the detected text meets criteria
-        if ~isempty(text) && any(isstrprop(text, 'digit')) && strlength(text) > 2 && strlength(text) <= 7
+        if ~isempty(text) && any(isstrprop(text, 'alpha')) && any(isstrprop(text, 'digit')) && strlength(text) > 2 && strlength(text) <= 7
             bottom_y = bbox(2) + bbox(4); % Bottom of the bounding box
             validCandidates{end+1} = {text, bbox, bottom_y};
-            
+
             % Adjust first character bounding box to original image coordinates
-            if ~isempty(firstCharBBox)
+            %if ~isempty(firstCharBBox)
                 % Scale factors from resized image (300x500) to plateImage
-                plateHeight = size(plateImage, 1);
-                plateWidth = size(plateImage, 2);
-                scaleX = plateWidth / 500;
-                scaleY = plateHeight / 300;
+                %plateHeight = size(plateImage, 1);
+                %plateWidth = size(plateImage, 2);
+                %scaleX = plateWidth / 500;
+                %scaleY = plateHeight / 300;
 
                 % Adjust bounding box: [x, y, width, height]
-                adjustedFirstCharBBox = [
-                    bbox(1) + firstCharBBox(1) * scaleX, ...  % x
-                    bbox(2) + firstCharBBox(2) * scaleY, ...  % y
-                    firstCharBBox(3) * scaleX, ...           % width
-                    firstCharBBox(4) * scaleY                % height
-                ];
+                %adjustedFirstCharBBox = [
+                    %bbox(1) + firstCharBBox(1) * scaleX, ...  % x
+                    %bbox(2) + firstCharBBox(2) * scaleY, ...  % y
+                    %firstCharBBox(3) * scaleX, ...           % width
+                    %firstCharBBox(4) * scaleY                % height
+                    %];
 
                 % Draw rectangle around first character on rectangleImage
-                rectangleImage = insertShape(rectangleImage, 'Rectangle', adjustedFirstCharBBox, ...
-                    'Color', 'yellow', 'LineWidth', 2);
-            end
+                %rectangleImage = insertShape(rectangleImage, 'Rectangle', adjustedFirstCharBBox, ...
+                    %'Color', 'yellow', 'LineWidth', 2);
+            %end
         end
     end
 end
