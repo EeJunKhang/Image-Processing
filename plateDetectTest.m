@@ -201,17 +201,18 @@ for i = 1:Ne
     % Add padding
     padded = padarray(cropped_resized, [padding_size padding_size], 0, 'both');
 
-    figure; imshow(padded); title(['Processed Character ', num2str(i)]);
+    %figure; imshow(padded); title(['Processed Character ', num2str(i)]);
 
     % Store the processed image
     cropped_images{i} = padded;
     padded = imcomplement(padded);
+    figure; imshow(padded); title(['Processed Character ', num2str(i)]);
     % Apply OCR
     ocr_result = ocr(padded, 'CharacterSet', char_set, 'LayoutAnalysis', 'character', 'Model', 'english').Text;
     disp(ocr_result);
     % Filter OCR result: ensure it's a single character from the character set
     ocr_result = strtrim(ocr_result);  % Remove whitespace
-    if length(ocr_result) == 1 && ismember(ocr_result, char_set)
+    if ismember(ocr_result, char_set)
         ocr_results{i} = ocr_result;
     else
         ocr_results{i} = '';  % Store empty if invalid

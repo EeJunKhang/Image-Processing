@@ -1,5 +1,4 @@
-function [croppedPlate, plateType, stepsImages, plateText] = main(img)
-    isSmallPlate = false;
+function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPlate)
 
     % Initialize stepsImages to store processing images and descriptions
     stepsImages = cell(6, 2); % 6 steps: Grayscale, Contrast, Denoise, Edge, Region, Cropped

@@ -84,7 +84,7 @@ function [np, background_is_white, stepsImages] = plateDetect5(img)
     
     % Adjust area filtering
     minArea = 600; % Reduced for smaller characters
-    maxArea = 8000;
+    maxArea = 12000;
     picture = bwareafilt(picture, [minArea maxArea]);
     stepsImages{5, 1} = picture;
     stepsImages{5, 2} = 'Area Filtering: Remove regions outside the expected size range for characters.';
@@ -198,10 +198,10 @@ function [np, background_is_white, stepsImages] = plateDetect5(img)
         padded = imcomplement(padded);
         % Apply OCR
         ocr_result = ocr(padded, 'CharacterSet', char_set, 'LayoutAnalysis', 'character', 'Model', 'english').Text;
-    
+
         % Filter OCR result: ensure it's a single character from the character set
         ocr_result = strtrim(ocr_result);  % Remove whitespace
-        if length(ocr_result) == 1 && ismember(ocr_result, char_set)
+        if ismember(ocr_result, char_set)
             ocr_results{i} = ocr_result;
         else
             ocr_results{i} = '';  % Store empty if invalid
