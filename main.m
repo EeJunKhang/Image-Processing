@@ -36,7 +36,11 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
     else
         dilatedEdges = imdilate(edgeImage, strel('rectangle', [2 8]));
     end
+    stepsImages{5, 1} = dilatedEdges;
+    stepsImages{5, 2} = 'Morphological operations: Connects edge fragments using dilation.';
     filledRegions = imfill(dilatedEdges, 'holes');
+    stepsImages{6, 1} = filledRegions;
+    stepsImages{6, 2} = 'Morphological operations: Fills the interiors of connected edge regions to get complete, filled candidate plate regions.';
     
     % Candidate region selection
     regionProps = regionprops(filledRegions, 'BoundingBox', 'Area', 'Extent');
@@ -95,8 +99,8 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
             end
         end
     end
-    stepsImages{5, 1} = rectangleImage;
-    stepsImages{5, 2} = 'Region Selection: Identify potential license plate regions with bounding boxes.';
+    stepsImages{7, 1} = rectangleImage;
+    stepsImages{7, 2} = 'Region Selection: Identify potential license plate regions with bounding boxes.';
     
     % 6. Plate extraction and manual OCR integration
     validCandidates = {};
@@ -156,7 +160,6 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
         if (stdR < stdThreshold && stdG < stdThreshold && stdB < stdThreshold) || ...
                 (freqMiddleR > freqThreshold && freqMiddleG > freqThreshold && freqMiddleB > freqThreshold)
             isValidPlate = false; % Image is too uniform (single color, normal-like histogram)
-          
         end
     
         % Proceed only if the plate is valid
@@ -186,14 +189,14 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
         % Extract the best plate image
         bestPlateImage = imcrop(img, bestPlateBBox);
         croppedPlate = bestPlateImage;
-        stepsImages{6, 1} = croppedPlate;
-        stepsImages{6, 2} = 'Plate Cropping: Extract the detected license plate region.';
+        stepsImages{8, 1} = croppedPlate;
+        stepsImages{8, 2} = 'Plate Cropping: Extract the detected license plate region.';
         
         plateText = bestPlateText;
 
         % Determine plate type
         if bestPlateText(1) == 'Z'
-            plateType = 'Z Plate';
+            plateType = 'Military  Plate';
         elseif background_is_white
             plateType = 'White Background Plate';
         else
@@ -203,8 +206,8 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
         croppedPlate = zeros(50, 50, 3, 'uint8'); % Empty image
         plateType = 'None';
         plateText = '';
-        stepsImages{6, 1} = croppedPlate;
-        stepsImages{6, 2} = 'Plate Cropping: No valid plate detected.';
+        stepsImages{8, 1} = croppedPlate;
+        stepsImages{8, 2} = 'Plate Cropping: No valid plate detected.';
         plateDetectSteps = cell(6, 2);
     end
 

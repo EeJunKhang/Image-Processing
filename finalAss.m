@@ -39,11 +39,11 @@ clear
 %Lorry IMG_20250505_104808-2.jpg
 %Lorry IMG_20250505_104851-2.jpg
 
-isSmallPlate = true;
+isSmallPlate = false;
 indexL = 0;
 
 % Read the input image
-originalImage = imread('Motor/470733805_9833816083339961_7529046492942010054_n.jpg');
+originalImage = imread('Car/Car_40.jpg');
 
 % Convert to grayscale
 grayImage = rgb2gray(originalImage);
@@ -170,7 +170,7 @@ for idx = 1:length(plateRegions)
 
     % Save for debugging (optional)
     if idx == indexL && indexL ~= 0
-        imwrite(plateImage, "result50.png"); % Use PNG for lossless
+        imwrite(plateImage, "result51.png"); % Use PNG for lossless
     end
 
     % Histogram-based filtering
