@@ -166,13 +166,12 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
         if isValidPlate
             % Apply manual OCR approach and get first character bounding box
             addpath("functions");
-            [text, background_is_white, detectSteps] = plateDetect5(plateImage);
+            [text, background_is_white] = plateDetect5(plateImage);
 
             % Check if the detected text meets criteria
             if ~isempty(text) && any(isstrprop(text, 'alpha')) && any(isstrprop(text, 'digit')) && strlength(text) > 2 && strlength(text) <= 7
                 bottom_y = bbox(2) + bbox(4); % Bottom of the bounding box
                 validCandidates{end+1} = {text, bbox, bottom_y, background_is_white};
-                plateDetectSteps = detectSteps; 
             end
         end
     end
@@ -188,10 +187,14 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
     
         % Extract the best plate image
         bestPlateImage = imcrop(img, bestPlateBBox);
+        %disp(bestPlateBBox);
+        
         croppedPlate = bestPlateImage;
         stepsImages{8, 1} = croppedPlate;
         stepsImages{8, 2} = 'Plate Cropping: Extract the detected license plate region.';
         
+        [~, background_is_white, detectSteps] = plateDetect5(bestPlateImage);
+        plateDetectSteps = detectSteps;
         plateText = bestPlateText;
 
         % Determine plate type
