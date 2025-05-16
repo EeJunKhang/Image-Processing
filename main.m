@@ -166,7 +166,7 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
         if isValidPlate
             % Apply manual OCR approach and get first character bounding box
             addpath("functions");
-            [text, background_is_white] = plateDetect5(plateImage);
+            [text, background_is_white, ~, ~] = plateDetect5(plateImage, false);
 
             % Check if the detected text meets criteria
             if ~isempty(text) && any(isstrprop(text, 'alpha')) && any(isstrprop(text, 'digit')) && strlength(text) > 2 && strlength(text) <= 7
@@ -183,17 +183,39 @@ function [croppedPlate, plateType, stepsImages, plateText] = main(img, isSmallPl
         [~, max_idx] = max(bottom_ys);
         bestPlateText = validCandidates{max_idx}{1};
         bestPlateBBox = validCandidates{max_idx}{2};
-        background_is_white = validCandidates{max_idx}{4};
+        %background_is_white = validCandidates{max_idx}{4};
     
         % Extract the best plate image
         bestPlateImage = imcrop(img, bestPlateBBox);
-        %disp(bestPlateBBox);
-        
-        croppedPlate = bestPlateImage;
-        stepsImages{8, 1} = croppedPlate;
+        stepsImages{8, 1} = bestPlateImage;
         stepsImages{8, 2} = 'Plate Cropping: Extract the detected license plate region.';
         
-        [~, background_is_white, detectSteps] = plateDetect5(bestPlateImage);
+        [~, background_is_white, detectSteps, bestbbox, scale_factors] = plateDetect5(bestPlateImage, true);
+        
+        % Convert the bounding box from the resized space back to original space
+        if ~isempty(bestbbox)
+            scale_x = scale_factors(1);
+            scale_y = scale_factors(2);
+            
+            % Format: [x, y, width, height]
+            original_bbox = [
+                bestbbox(1) * scale_x, ...
+                bestbbox(2) * scale_y, ...   
+                bestbbox(3) * scale_x, ...   
+                bestbbox(4) * scale_y        
+            ];
+            
+            % Round to integers for display
+            original_bbox = round(original_bbox);
+            
+            % Draw the bounding box on the original image
+            croppedPlate = bestPlateImage;
+            croppedPlate = insertShape(croppedPlate, 'Rectangle', original_bbox, 'Color', 'red', 'LineWidth', 1);
+        else
+            % Handle case where no bbox was found
+            croppedPlate = bestPlateImage;
+        end
+
         plateDetectSteps = detectSteps;
         plateText = bestPlateText;
 

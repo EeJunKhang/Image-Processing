@@ -1,16 +1,21 @@
-function [np, background_is_white, stepsImages] = plateDetect5(img)
+function [np, background_is_white, stepsImages, bestbbox, scale_factors] = plateDetect5(img, istrue)
+    bestbbox = [];
     % Initialize stepsImages to store processing images and descriptions
     stepsImages = cell(6, 2); % 6 steps
 
     % Image correlation method
     picture = imresize(img, [300 500]);
     
+    % Calculate scale factors
+    scale_x = size(img, 2) / 500;  % original_width / resized_width
+    scale_y = size(img, 1) / 300;  % original_height / resized_height
+    scale_factors = [scale_x, scale_y];
+
     if size(picture, 3) == 3
         picture = rgb2gray(picture);  % Convert to grayscale (0-255)
     end
     stepsImages{1, 1} = picture;
     stepsImages{1, 2} = 'Grayscale Conversion: Convert the cropped plate image to grayscale.';
-    
     
     % Detect background color using border sampling and edge detection
     [rows, cols] = size(picture);
@@ -75,8 +80,6 @@ function [np, background_is_white, stepsImages] = plateDetect5(img)
     picture = imerode(picture, se_erode);  % Erode to separate touching characters
     stepsImages{4, 1} = picture;
     stepsImages{4, 2} = 'Erosion: Erode the image to separate touching characters.';
-    
-    
     
     if background_is_white
         picture = imcomplement(picture);
@@ -181,10 +184,14 @@ function [np, background_is_white, stepsImages] = plateDetect5(img)
         y = floor(thisBB(2));
         width = ceil(thisBB(3));
         height = ceil(thisBB(4));
+
+        if i == 1 && istrue
+            bestbbox = [x, y, width, height];
+        end
     
         % Crop the region from the binary image
         cropped = imcrop(picture, [x, y, width, height]);
-    
+        
         % Resize to 150x150
         cropped_resized = imresize(cropped, [150 150]);
     
