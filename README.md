@@ -3,7 +3,7 @@ specifically target for Malaysia License Plate
 Made using Matlab
 
 # Features
-- Detect License Plate of different vehicles (Lorries, Taxi, Car, Motorcycle, EV Car)
+- Detect License Plate of different vehicles (Lorries, Taxi, Car, Motorcycle, EV Car, Bus)
 - Identify State from license plate from the first character
 
 # Settings
